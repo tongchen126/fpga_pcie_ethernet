@@ -1,4 +1,4 @@
-# You can build a custom PCIe Gigabyte Ethernet on your FPGA board.  
+# Build a custom PCIe Gigabyte Ethernet on your own!    
 # This project is based on [litex](https://github.com/enjoy-digital/litex).  
 # Step 1: Replace the corresponding files of original litex library.
 1. Make sure you have installed litex and know its installation path.
