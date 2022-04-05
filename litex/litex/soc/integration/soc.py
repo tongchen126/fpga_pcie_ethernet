@@ -34,8 +34,8 @@
             "eth_rx": phy_cd + "_rx"})(ethmac)
         setattr(self.submodules, name, ethmac)
         # Compute Regions size and add it to the SoC.
-        ethmac_region_rx = SoCRegion(origin=0, size=ethmac.rx_slots.read() * ethmac.slot_size.read(), cached=False)
-        ethmac_region_tx = SoCRegion(origin=0, size=ethmac.tx_slots.read() * ethmac.slot_size.read(), cached=False)
+        ethmac_region_rx = SoCRegion(origin=0, size=ethmac.rx_slots.constant * ethmac.slot_size.constant, cached=False)
+        ethmac_region_tx = SoCRegion(origin=0, size=ethmac.tx_slots.constant * ethmac.slot_size.constant, cached=False)
         self.pcie_mem_bus_rx.add_region(name="io",region=SoCIORegion(0x00000000,0x100000000))
         self.pcie_mem_bus_tx.add_region(name="io",region=SoCIORegion(0x00000000,0x100000000))
         self.pcie_mem_bus_rx.add_slave(name='ethmac_rx', slave=ethmac.rx_bus, region=ethmac_region_rx)
@@ -80,15 +80,15 @@
 
         align_bits = log2_int(512)
         self.comb += [
-            pcie_host_wb2pcie_dma.bus_addr.eq(ethmac_region_rx.origin + ethmac.interface.sram.writer.stat_fifo.source.slot * ethmac.slot_size.read()),
-            pcie_host_wb2pcie_dma.host_addr_offset.eq(ethmac.interface.sram.writer.pcie_slot * ethmac.slot_size.read()),
+            pcie_host_wb2pcie_dma.bus_addr.eq(ethmac_region_rx.origin + ethmac.interface.sram.writer.stat_fifo.source.slot * ethmac.slot_size.constant),
+            pcie_host_wb2pcie_dma.host_addr.eq(ethmac.interface.sram.writer.pcie_host_addr),
             pcie_host_wb2pcie_dma.length.eq(Cat(Signal(align_bits,reset=0), (ethmac.interface.sram.writer.stat_fifo.source.length[align_bits:] + 1))),
             pcie_host_wb2pcie_dma.start.eq(ethmac.interface.sram.writer.start_transfer),
             ethmac.interface.sram.writer.transfer_ready.eq(pcie_host_wb2pcie_dma.ready),
         ]
         self.comb += [
-            pcie_host_pcie2wb_dma.bus_addr.eq(ethmac_region_tx.origin + ethmac.interface.sram.reader.cmd_fifo.source.slot * ethmac.slot_size.read()),
-            pcie_host_pcie2wb_dma.host_addr_offset.eq(ethmac.interface.sram.reader.cmd_fifo.source.slot * ethmac.slot_size.read()),
+            pcie_host_pcie2wb_dma.bus_addr.eq(ethmac_region_tx.origin + ethmac.interface.sram.reader.cmd_fifo.source.slot * ethmac.slot_size.constant),
+            pcie_host_pcie2wb_dma.host_addr.eq(ethmac.interface.sram.reader.pcie_host_addr),
             pcie_host_pcie2wb_dma.length.eq(Cat(Signal(align_bits, reset=0), (ethmac.interface.sram.reader.cmd_fifo.source.length[align_bits:] + 1))),
             pcie_host_pcie2wb_dma.start.eq(ethmac.interface.sram.reader.start_transfer),
             ethmac.interface.sram.reader.transfer_ready.eq(pcie_host_pcie2wb_dma.ready),

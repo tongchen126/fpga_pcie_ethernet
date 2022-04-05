@@ -338,8 +338,7 @@ class LiteWishbone2PCIeDMANative(Module, AutoCSR):
         desc_wr = stream.Endpoint(dma_descriptor_layout())
         self.submodules.fifo_wr = fifo_wr = stream.SyncFIFO(dma_descriptor_layout(), 16)
 
-        self.host_base_addr = host_base_addr = CSRStorage(32, reset=0)
-        self.host_addr_offset = host_addr_offset = Signal(32, reset=0)
+        self.host_addr = host_addr = Signal(32, reset=0)
         self.length = length = Signal(32, reset=0)
         self.bus_addr = bus_addr = Signal(32, reset=0)
         self.irq_disable = irq_disable = CSRStorage(1, description="Disable PCIe2Wishbone IRQ", reset=0)
@@ -351,7 +350,6 @@ class LiteWishbone2PCIeDMANative(Module, AutoCSR):
         wb_dma.add_ctrl()
         self.submodules.conv_wr = conv_wr = stream.Converter(nbits_from=data_width, nbits_to=endpoint.phy.data_width)
         self.irq = Signal(reset=0)
-
         dma_enable = Signal(reset=0)
 
         self.test1 = CSRStatus(32, reset=0)
@@ -367,7 +365,7 @@ class LiteWishbone2PCIeDMANative(Module, AutoCSR):
             dma_fifo.source.connect(dma_wr.desc_sink),
             desc_wr.connect(fifo_wr.sink),
 
-            desc_wr.host_addr.eq(host_base_addr.storage + host_addr_offset),
+            desc_wr.host_addr.eq(host_addr),
             desc_wr.length.eq(length),
             desc_wr.bus_addr.eq(bus_addr),
             desc_wr.valid.eq(start),
@@ -417,8 +415,7 @@ class LitePCIe2WishboneDMANative(Module, AutoCSR):
         desc_rd = stream.Endpoint(dma_descriptor_layout())
         self.submodules.fifo_rd = fifo_rd = stream.SyncFIFO(dma_descriptor_layout(), 16)
 
-        self.host_base_addr = host_base_addr = CSRStorage(32, reset=0)
-        self.host_addr_offset = host_addr_offset = Signal(32, reset=0)
+        self.host_addr = host_addr = Signal(32, reset=0)
         self.length = length = Signal(32, reset=0)
         self.bus_addr = bus_addr = Signal(32, reset=0)
         self.irq_disable = irq_disable = CSRStorage(1, description="Disable PCIe2Wishbone IRQ", reset=0)
@@ -429,7 +426,6 @@ class LitePCIe2WishboneDMANative(Module, AutoCSR):
         self.submodules.wb_dma = wb_dma = WishboneDMAWriterCtrl(self.bus_rd)
         wb_dma.add_ctrl()
         self.irq = Signal(reset=0)
-
         self.submodules.conv_rd = conv_rd = stream.Converter(nbits_from=endpoint.phy.data_width, nbits_to=data_width)
         dma_enable = Signal(reset=0)
 
@@ -446,7 +442,7 @@ class LitePCIe2WishboneDMANative(Module, AutoCSR):
             dma_fifo.source.connect(dma_rd.desc_sink),
             desc_rd.connect(fifo_rd.sink),
 
-            desc_rd.host_addr.eq(host_base_addr.storage + host_addr_offset),
+            desc_rd.host_addr.eq(host_addr),
             desc_rd.length.eq(length),
             desc_rd.bus_addr.eq(bus_addr),
             desc_rd.valid.eq(self.start),
